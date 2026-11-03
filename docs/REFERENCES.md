@@ -15,4 +15,6 @@
 Update with `git -C ../reference/<name> pull`.
 
 ## Game
-- Startups (Oink Games) – https://oinkgames.com/en/games/analog/startups/
+- Rules summary (local): [../rules/startups-rules.md](../rules/startups-rules.md), based on https://whatsericplaying.com/2018/01/01/startups/
+- Official rules text: https://hobbygames.ru/download/rules/startups-rules.pdf
+- Startups (Oink Games) official page – https://oinkgames.com/en/games/analog/startups/
