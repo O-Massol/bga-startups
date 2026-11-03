@@ -15,7 +15,7 @@ Read `../reference/INDEX.md` first. It indexes `../reference/docs/*.mediawiki` (
 Rules of Startups are in `rules/startups-rules.md` (official rules plus project decisions: 3–7 players, 6 companies, numeric balance, no multi-round variant). Consult it before implementing game logic.
 
 ## Architecture (BGA framework)
-- Server: PHP 8.4 in `Game.php` plus state classes in `States/` (modern framework; `states.inc.php`, `X.action.php`, `X.view.php` are legacy). Static data in `material.inc.php`, schema in `dbmodel.sql`, stats in `stats.jsonc`, metadata in `gameinfos.jsonc`, options in `gameoptions.jsonc`.
+- Server: PHP 8.4 in `modules/php/Game.php` plus state classes in `modules/php/States/` (modern framework; `states.inc.php`, `X.action.php`, `X.view.php` are legacy). Static data in `material.inc.php`, schema in `dbmodel.sql`, stats in `stats.jsonc`, metadata in `gameinfos.jsonc`, options in `gameoptions.jsonc`.
 - Client: `Game.js` (JS module) + CSS. Avoid Dojo (deprecated). Prefer official components `bga-cards`, `bga-animations`, `bga-zoom`; avoid deprecated `Deck` (PHP) and `Stock` (JS) in favour of `ItemManager` / `bga-cards`.
 - Server and client communicate only through state transitions and notifications.
 
