@@ -5,10 +5,10 @@ Use the modern framework (`Game.php`, `States/`, `Game.js`), not the legacy `sta
 Each iteration ends with a playable, testable Studio build and a commit.
 
 ## 0. Environment
-- [ ] Get a BGA Studio account and create the project `startups`; start from the `emptygame` template.
-- [ ] Set up SFTP/VSCode sync (`../reference/docs/Setting_up_BGA_Development_environment_using_VSCode.mediawiki`, `../reference/bga-dev-template`) so the repo root maps to the Studio project folder.
-- [ ] Copy the generated skeleton into this repo; commit as baseline.
-- Done when: a 3-player test table opens in Studio from this repo's files.
+- [x] Get a BGA Studio account and create the project `startups`; start from the `emptygame` template.
+- [x] Set up SFTP/VSCode sync (`../reference/docs/Setting_up_BGA_Development_environment_using_VSCode.mediawiki`, `../reference/bga-dev-template`) so the repo root maps to the Studio project folder.
+- [x] Copy the generated skeleton into this repo; commit as baseline.
+- Done when: a 3-player test table opens in Studio from this repo's files. (verified: table #990994)
 
 ## 1. Metadata and static data
 - [ ] `gameinfos.jsonc`: name, players 3–7, no options, no turn-order tweaks, tie-break info.
