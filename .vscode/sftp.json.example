@@ -1,0 +1,14 @@
+{
+  "name": "BGA - startups",
+  "host": "1.studio.boardgamearena.com",
+  "protocol": "sftp",
+  "port": 2022,
+  "username": "YOUR_BGA_USERNAME",
+  "privateKeyPath": "~/Perso/BGA/bga-ssh/id_rsa",
+  "remotePath": "/startups",
+  "useTempFile": false,
+  "openSsh": false,
+  "uploadOnSave": true,
+  "ignore": [".vscode", ".devcontainer", "node_modules", ".git", ".github", ".DS_Store", "docs", "rules", "plan.md", "README.md"],
+  "syncOption": { "skipCreate": false, "delete": false }
+}

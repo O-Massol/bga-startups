@@ -12,6 +12,10 @@
 - `bga-sharedcode` – https://github.com/elaskavaia/bga-sharedcode
 - `bga-dev-template` – https://github.com/tikoflano/bga-dev-template
 
+## SSH key for Studio SFTP (outside this repo, in `../bga-ssh/`)
+- `../bga-ssh/id_rsa` (private, 4096-bit RSA, no passphrase) and `../bga-ssh/id_rsa.pub` (register in Studio).
+- Referenced by `privateKeyPath` in `.vscode/sftp.json` (template: `.vscode/sftp.json.example`). Never copy it into this repo.
+
 Update with `git -C ../reference/<name> pull`.
 
 ## Game

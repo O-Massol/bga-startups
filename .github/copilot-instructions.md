@@ -5,6 +5,9 @@ Board Game Arena (BGA Studio) adaptation of Oink Games' *Startups*. The repo is 
 ## Build / test / lint
 No local build, test or lint tooling. Code is synced to the BGA Studio server (SFTP / VSCode, see `../reference/docs/Setting_up_BGA_Development_environment_using_VSCode.mediawiki`) and tested in the Studio by creating a table. Use the Studio "Dry-run build" to check translatable strings, and `debug_`-prefixed PHP methods (callable from the Studio debug menu) for testing.
 
+## SSH key
+The Studio SFTP key pair is in `../bga-ssh/` (outside this repo). Never read, print, copy or commit the private key `id_rsa`; only `id_rsa.pub` may be shown.
+
 ## Reference material (outside this repo, in `../reference/`)
 Read `../reference/INDEX.md` first. It indexes `../reference/docs/*.mediawiki` (offline copy of the BGA Studio docs: `Game.php`, `States/`, `Game.js`, `BgaCards`, etc.) and two community repos: `bga-sharedcode` and `bga-dev-template`. Prefer these over memory for framework API details.
 

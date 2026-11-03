@@ -1,0 +1,4 @@
+.vscode/sftp.json
+.devcontainer/devcontainer.env
+node_modules/
+.DS_Store
