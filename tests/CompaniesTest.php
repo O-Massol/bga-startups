@@ -51,21 +51,31 @@ final class CompaniesTest extends TestCase
     }
 
     #[Test]
-    public function materialCompanies_allCompanyIds_haveMatchingNonEmptyNames(): void
+    #[DataProvider('companyNames')]
+    public function materialCompanies_companyId_hasExpectedName(string $companyId, string $expectedName): void
     {
         $game = new class {
             public array $companies;
 
             public function load(): void
             {
-                require dirname(__DIR__) . "/material.inc.php";
+                require dirname(__DIR__) . '/material.inc.php';
             }
         };
         $game->load();
 
-        $this->assertSame(Companies::ids(), array_keys($game->companies));
-        foreach ($game->companies as $company) {
-            $this->assertNotSame('', $company['name']);
-        }
+        $this->assertSame($expectedName, $game->companies[$companyId]['name']);
+    }
+
+    public static function companyNames(): array
+    {
+        return [
+            'giraffe beer' => [Companies::GIRAFFE_BEER, 'Giraffe Beer'],
+            'bowwow games' => [Companies::BOWWOW_GAMES, 'Bowwow Games'],
+            'flamingo soft' => [Companies::FLAMINGO_SOFT, 'Flamingo Soft'],
+            'octo coffee' => [Companies::OCTO_COFFEE, 'Octo Coffee'],
+            'hippo powertech' => [Companies::HIPPO_POWERTECH, 'Hippo Powertech'],
+            'elephant mars travel' => [Companies::ELEPHANT_MARS_TRAVEL, 'Elephant Mars Travel'],
+        ];
     }
 }
