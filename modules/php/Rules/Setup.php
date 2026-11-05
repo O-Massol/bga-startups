@@ -11,4 +11,9 @@ final class Setup
     public const STARTING_MONEY = 10;
     public const MIN_PLAYERS = 3;
     public const MAX_PLAYERS = 7;
+
+    public static function drawPileSize(int $playerCount): int
+    {
+        return Companies::totalCards() - self::CARDS_REMOVED - $playerCount * self::HAND_SIZE;
+    }
 }

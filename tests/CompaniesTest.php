@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bga\Games\startups\Rules\Companies;
 use Bga\Games\startups\Rules\Setup;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -32,10 +33,21 @@ final class CompaniesTest extends TestCase
     }
 
     #[Test]
-    public function totalCards_maxPlayersAndRemovedCards_leavesNonEmptyDrawPile(): void
+    #[DataProvider('drawPileSizes')]
+    public function drawPileSize_playerCount_returnsDeckMinusRemovedAndDealtCards(int $playerCount, int $expected): void
     {
-        $dealt = Setup::MAX_PLAYERS * Setup::HAND_SIZE;
-        $this->assertGreaterThan(0, Companies::totalCards() - Setup::CARDS_REMOVED - $dealt);
+        $this->assertSame($expected, Setup::drawPileSize($playerCount));
+    }
+
+    public static function drawPileSizes(): array
+    {
+        return [
+            '3 players' => [3, 31],
+            '4 players' => [4, 28],
+            '5 players' => [5, 25],
+            '6 players' => [6, 22],
+            '7 players' => [7, 19],
+        ];
     }
 
     #[Test]
