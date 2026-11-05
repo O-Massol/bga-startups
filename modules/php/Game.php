@@ -25,6 +25,8 @@ class Game extends \Bga\GameFramework\Table
 {
     public static array $CARD_TYPES;
 
+    public array $companies;
+
     public PlayerCounter $playerEnergy;
 
     /**
@@ -39,6 +41,8 @@ class Game extends \Bga\GameFramework\Table
     public function __construct()
     {
         parent::__construct();
+
+        require_once(__DIR__ . '/../../material.inc.php');
 
         $this->playerEnergy = $this->bga->counterFactory->createPlayerCounter('energy');
 
