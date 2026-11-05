@@ -69,6 +69,18 @@ Rules to enforce in the server, with the exact `UserException` message when viol
 - [ ] Bots (`../reference/docs/Bots_and_Artificial_Intelligence.mediawiki`).
 - [ ] Publisher licence and submission (`BGA_game_Lifecycle`, `BGA_Game_licenses`).
 
+## Automated tests (PHPUnit) – cross-cutting, start with sections 3–4
+Approach: keep rules logic in pure PHP classes (`modules/php/Rules/`, no `Game`/DB dependency): draw cost, market take/put-back legality, chip-holder majority, final scoring. `Game.php` and `States/` stay thin (load data, call rules, persist, notify).
+- [ ] Install PHPUnit via composer **outside the repo** (e.g. `~/php-composer`, see `../reference/docs/Setting_up_BGA_Development_environment_using_VSCode.mediawiki`, "Unit testing" and "Testing by developer"), and add that path to `intelephense.environment.includePaths`.
+- [ ] Add `tests/` and `phpunit.xml` in the repo; first tests: scoring (tie, 3 players with 2 equal majorities, negative balances), draw cost, chip-holder tie keeps earlier holder.
+- [ ] Add `tests`, `phpunit.xml`, `composer.json`, `composer.lock`, `vendor` to the `ignore` list in `.vscode/sftp.json.example` (and local `sftp.json`) so they are not uploaded to Studio / shipped on release.
+Limitations:
+- Not unit-testable cheaply: state transitions, `getAllDatas`, notifications, replay safety, DB queries. Cover them with Studio `debug_` helpers and the test checklist below.
+- The SFTP `ignore` list only affects the VSCode SFTP extension. Any other sync (rsync, BGA release process) must exclude the same files.
+- Rules classes must stay deployable (they are runtime code); only the tests are excluded.
+- No official BGA test harness; no browser end-to-end tests planned (fragile: login, iframes, table creation).
+- JS tests (Vitest/Jest) only for pure helpers, low priority.
+
 ## Test checklist (run each iteration)
 - 3, 5 and 7 player tables; refresh mid-turn; zombie/quit a player; replay from a move.
 - Edge cases: cannot afford draw; holder tries to take its company from the market; put back same company; tie for majority at scoring; last card drawn by the last seat.

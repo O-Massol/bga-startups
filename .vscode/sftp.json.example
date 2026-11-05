@@ -9,6 +9,6 @@
   "useTempFile": false,
   "openSsh": false,
   "uploadOnSave": true,
-  "ignore": [".vscode", ".devcontainer", "node_modules", ".git", ".github", ".DS_Store", "docs", "rules", "plan.md", "README.md"],
+  "ignore": [".vscode", ".devcontainer", "node_modules", ".git", ".github", ".DS_Store", "docs", "rules", "plan.md", "README.md", "tests", "phpunit.xml", "composer.json", "composer.lock", "vendor"],
   "syncOption": { "skipCreate": false, "delete": false }
 }
