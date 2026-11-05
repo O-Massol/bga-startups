@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Bga\Games\startups\Rules\Companies;
 use Bga\Games\startups\Rules\Setup;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class CompaniesTest extends TestCase
 {
-    public function testSixCompaniesInScoringOrderWithExpectedCardCounts(): void
+    #[Test]
+    public function cardCounts_all_areSixCompaniesInScoringOrderWithExpectedCounts(): void
     {
         $this->assertSame(
             [
@@ -23,18 +25,21 @@ final class CompaniesTest extends TestCase
         );
     }
 
-    public function testDeckHas45Cards(): void
+    #[Test]
+    public function totalCards_allCompanies_returns45(): void
     {
         $this->assertSame(45, Companies::totalCards());
     }
 
-    public function testDeckIsLargeEnoughForMaxPlayers(): void
+    #[Test]
+    public function totalCards_maxPlayersAndRemovedCards_leavesNonEmptyDrawPile(): void
     {
         $dealt = Setup::MAX_PLAYERS * Setup::HAND_SIZE;
         $this->assertGreaterThan(0, Companies::totalCards() - Setup::CARDS_REMOVED - $dealt);
     }
 
-    public function testEveryCompanyHasATranslatableName(): void
+    #[Test]
+    public function materialCompanies_allCompanyIds_haveMatchingNonEmptyNames(): void
     {
         $game = new class {
             public array $companies;

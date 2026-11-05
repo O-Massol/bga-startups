@@ -27,3 +27,6 @@ Rules of Startups are in `rules/startups-rules.md` (official rules plus project 
 - Wrap user-visible strings in translation functions (`clienttranslate` in PHP, `_()` in JS).
 - Debug helpers must be prefixed `debug_` to appear in the Studio debug menu.
 - Follow `../reference/docs/BGA_Studio_Guidelines.mediawiki` and `Pre-release_checklist.mediawiki`.
+
+## Test conventions (PHPUnit)
+Tests live in `tests/`, run with `../php-composer/vendor/bin/phpunit` from the repo root. Name test methods `unitUnderTest_inputsDescription_expectedResultSummary` (e.g. `totalCards_allCompanies_returns45`) and mark each with the `#[Test]` attribute (no `test` prefix).
