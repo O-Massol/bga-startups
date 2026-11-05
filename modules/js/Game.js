@@ -12,9 +12,7 @@
  */
 
 /**
- * @typedef {Player & {
- *   energy: number
- * }} startupsPlayer
+ * @typedef {Player} startupsPlayer
  */
 /**
  * @typedef {Gamedatas<startupsPlayer> & {
@@ -149,17 +147,6 @@ export class Game {
         
         // Setting up player boards
         Object.values(gamedatas.players).forEach(player => {
-            // example of setting up players boards
-            this.bga.playerPanels.getElement(Number(player.id)).insertAdjacentHTML('beforeend', `
-                <span id="energy-player-counter-${player.id}"></span> Energy
-            `);
-            const counter = new ebg.counter();
-            counter.create(`energy-player-counter-${player.id}`, {
-                value: player.energy,
-                playerCounter: 'energy',
-                playerId: Number(player.id)
-            });
-
             // example of adding a div for each player
             document.getElementById('player-tables').insertAdjacentHTML('beforeend', `
                 <div id="player-table-${player.id}">
