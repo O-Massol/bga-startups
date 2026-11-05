@@ -10,3 +10,11 @@ spl_autoload_register(function (string $class): void {
         }
     }
 });
+
+// Stand-in for the framework's translation marker, so material.inc.php can be loaded.
+if (!function_exists('clienttranslate')) {
+    function clienttranslate(string $text): string
+    {
+        return $text;
+    }
+}
