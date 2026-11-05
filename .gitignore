@@ -2,3 +2,5 @@
 .devcontainer/devcontainer.env
 node_modules/
 .DS_Store
+.vscode/settings.json
+.phpunit.result.cache

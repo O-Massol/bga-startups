@@ -1,28 +1,11 @@
-{    
-    // Statistics for the table
-    "table": {},
-    
-    // Statistics for each player
+{
+    "table": {
+        "turns_number": { "id": 10, "name": "Number of turns", "type": "int" }
+    },
     "player": {
-      /* 
-      EXAMPLE:
-
-      "turns_number": {
-        "id": 10,
-        "name": "Number of turns",
-        "type": "int"
-      },
-      "player_teststat1": {
-        "id": 11,
-        "name": "player test stat 1",
-        "type": "int"
-      },
-      "player_teststat2": {
-        "id": 12,
-        "name": "player test stat 2",
-        "type": "float"
-      }
-      */
-
+        "cards_from_market": { "id": 11, "name": "Cards taken from the market", "type": "int" },
+        "chips_paid": { "id": 12, "name": "Chips paid to draw", "type": "int" },
+        "chips_collected": { "id": 13, "name": "Chips collected from the market", "type": "int" },
+        "majorities_held": { "id": 14, "name": "Majorities held at the end", "type": "int" }
     }
 }

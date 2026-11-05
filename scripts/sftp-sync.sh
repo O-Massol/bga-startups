@@ -14,7 +14,7 @@ PROJECT="${BGA_PROJECT:-startups}"
 SFTP=(sftp -b - -P "$PORT" -i "$KEY" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER_@$HOST")
 
 # Paths not uploaded to Studio
-EXCLUDES=(.git .github .vscode scripts docs rules plan.md README.md .gitignore)
+EXCLUDES=(.git .github .vscode scripts docs rules plan.md README.md .gitignore tests phpunit.xml .phpunit.result.cache composer.json composer.lock vendor)
 
 case "${1:-}" in
   ls)
