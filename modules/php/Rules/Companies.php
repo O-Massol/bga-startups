@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Bga\Games\startups\Rules;
 
+/**
+ * Components rule: 6 companies [Decision], 45 cards in total; the number of cards per company
+ * is also the order in which companies are scored (Scoring rule).
+ */
 final class Companies
 {
     public const GIRAFFE_BEER = 'giraffe_beer';
