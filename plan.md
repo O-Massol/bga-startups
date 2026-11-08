@@ -18,9 +18,9 @@ Each iteration ends with a playable, testable Studio build and a commit.
 - Done when: the table is created without SQL errors.
 
 ## 2. Game setup (`setupNewGame`)
-- [ ] Build the 45-card deck, shuffle, remove 5 (location `removed`), deal 3 per player, give 10 chips each.
-- [ ] Initial `getAllDatas`: own hand (private), other players' hand counts, market (empty), portfolios, chip owners, balances, deck size.
-- [ ] Minimal `Game.js` that renders this state (plain DOM first).
+- [x] Build the 45-card deck, shuffle, remove 5 (location `removed`), deal 3 per player, give 10 chips each.
+- [x] Initial `getAllDatas`: own hand (private), other players' hand counts, market (empty), portfolios, chip owners, balances, deck size.
+- [x] Minimal `Game.js` that renders this state (plain DOM first).
 - Done when: starting a table shows each player's own 3 cards and 10 money; others' hands are hidden.
 
 ## 3. Turn state machine (server)

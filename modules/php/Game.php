@@ -52,7 +52,7 @@ class Game extends \Bga\GameFramework\Table
      */
     protected function getAllDatas(int $currentPlayerId): array
     {
-        return $this->gameStateBuilder()->build($currentPlayerId);
+        return $this->gameStateBuilder()->build($currentPlayerId) + ['companies' => $this->companies];
     }
 
     protected function setupNewGame($players, $options = [])

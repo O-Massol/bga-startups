@@ -78,14 +78,25 @@ export class Game {
 
         this.bga.gameArea.getElement().insertAdjacentHTML('beforeend', `<div id="player-tables"></div>`);
 
+        const companyName = id => _(gamedatas.companies[id].name);
+
         Object.values(gamedatas.players).forEach(player => {
+            const handCount = gamedatas.handCounts[player.id] ?? 0;
             document.getElementById('player-tables').insertAdjacentHTML('beforeend', `
                 <div id="player-table-${player.id}">
                     <strong>${player.name}</strong>
                     <span>${_('Money')}: <span id="money-${player.id}">${player.money}</span></span>
+                    <span>${_('Cards in hand')}: <span id="hand-count-${player.id}">${handCount}</span></span>
                 </div>
             `);
         });
+
+        this.bga.gameArea.getElement().insertAdjacentHTML('beforeend', `
+            <div id="deck">${_('Draw pile')}: <span id="deck-count">${gamedatas.deckCount}</span></div>
+            <div id="my-hand"><strong>${_('Your hand')}</strong>
+                ${gamedatas.hand.map(card => `<div class="card" data-card-id="${card.id}">${companyName(card.company)}</div>`).join('')}
+            </div>
+        `);
 
         this.setupNotifications();
     }
