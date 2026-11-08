@@ -37,4 +37,14 @@ final class Companies
     {
         return array_sum(self::CARD_COUNTS);
     }
+
+    /** @return string[] one company id per physical card */
+    public static function allCards(): array
+    {
+        $cards = [];
+        foreach (self::CARD_COUNTS as $company => $count) {
+            array_push($cards, ...array_fill(0, $count, $company));
+        }
+        return $cards;
+    }
 }
