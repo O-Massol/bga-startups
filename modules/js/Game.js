@@ -82,6 +82,7 @@ export class Game {
             document.getElementById('player-tables').insertAdjacentHTML('beforeend', `
                 <div id="player-table-${player.id}">
                     <strong>${player.name}</strong>
+                    <span>${_('Money')}: <span id="money-${player.id}">${player.money}</span></span>
                 </div>
             `);
         });

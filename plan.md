@@ -11,10 +11,10 @@ Each iteration ends with a playable, testable Studio build and a commit.
 - Done when: a 3-player test table opens in Studio from this repo's files. (verified: table #990994)
 
 ## 1. Metadata and static data
-- [ ] `gameinfos.jsonc`: name, players 3–7, no options, no turn-order tweaks, tie-break info.
-- [ ] `material.inc.php`: 6 companies (id, name, card count 5–10), constants.
-- [ ] `dbmodel.sql`: tables for cards (id, company, location, location_arg), market chips, anti-monopoly chip owner per company; player balance via the standard `player.player_score` or a dedicated column.
-- [ ] `stats.jsonc`: a few stats (e.g. cards taken from market, chips paid out, final majorities held).
+- [x] `gameinfos.jsonc`: name, players 3–7, no options, no turn-order tweaks, tie-break info.
+- [x] `material.inc.php`: 6 companies (id, name, card count 5–10), constants.
+- [x] `dbmodel.sql`: tables for cards (id, company, location, location_arg), market chips, anti-monopoly chip owner per company; player balance via the standard `player.player_score` or a dedicated column.
+- [x] `stats.jsonc`: a few stats (e.g. cards taken from market, chips paid out, final majorities held).
 - Done when: the table is created without SQL errors.
 
 ## 2. Game setup (`setupNewGame`)

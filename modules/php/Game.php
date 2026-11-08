@@ -14,6 +14,12 @@ declare(strict_types=1);
 
 namespace Bga\Games\startups;
 
+use Bga\Games\startups\Repository\FrameworkDb;
+use Bga\Games\startups\Repository\SqlCardRepository;
+use Bga\Games\startups\Repository\SqlChipRepository;
+use Bga\Games\startups\Repository\SqlPlayerRepository;
+use Bga\Games\startups\Service\GameStateBuilder;
+use Bga\Games\startups\Service\SetupService;
 use Bga\Games\startups\States\PlayerTurn;
 
 class Game extends \Bga\GameFramework\Table
@@ -46,12 +52,7 @@ class Game extends \Bga\GameFramework\Table
      */
     protected function getAllDatas(int $currentPlayerId): array
     {
-        $result = [];
-        $result["players"] = $this->getCollectionFromDb(
-            "SELECT `player_id` AS `id`, `player_score` AS `score` FROM `player`"
-        );
-
-        return $result;
+        return $this->gameStateBuilder()->build($currentPlayerId);
     }
 
     protected function setupNewGame($players, $options = [])
@@ -59,30 +60,60 @@ class Game extends \Bga\GameFramework\Table
         $gameinfos = $this->getGameinfos();
         $default_colors = $gameinfos['player_colors'];
 
+        $newPlayers = [];
         foreach ($players as $player_id => $player) {
-            $query_values[] = vsprintf("(%s, '%s', '%s')", [
-                $player_id,
-                array_shift($default_colors),
-                addslashes($player["player_name"]),
-            ]);
+            $newPlayers[] = [
+                'id' => $player_id,
+                'color' => array_shift($default_colors),
+                'name' => $player["player_name"],
+            ];
         }
-
-        static::DbQuery(
-            sprintf(
-                "INSERT INTO `player` (`player_id`, `player_color`, `player_name`) VALUES %s",
-                implode(",", $query_values)
-            )
-        );
+        $this->playerRepository()->createAll($newPlayers);
 
         $this->reattributeColorsBasedOnPreferences($players, $gameinfos["player_colors"]);
         $this->reloadPlayersBasicInfos();
 
-        // TODO: Setup the initial game situation here.
+        $this->setupService()->run(array_keys($players), function (array $companies): array {
+            for ($i = count($companies) - 1; $i > 0; $i--) {
+                $j = bga_rand(0, $i);
+                [$companies[$i], $companies[$j]] = [$companies[$j], $companies[$i]];
+            }
+            return $companies;
+        });
 
         // Activate first player once everything has been initialized and ready.
         $this->activeNextPlayer();
 
         return PlayerTurn::class;
+    }
+
+    private function db(): FrameworkDb
+    {
+        return new FrameworkDb(
+            fn(string $sql) => static::DbQuery($sql),
+            fn(string $sql, bool $single) => $this->getCollectionFromDb($sql, $single),
+            fn(string $sql) => static::getUniqueValueFromDB($sql),
+            fn(string $value) => "'" . static::escapeStringForDB($value) . "'",
+        );
+    }
+
+    private function playerRepository(): SqlPlayerRepository
+    {
+        return new SqlPlayerRepository($this->db());
+    }
+
+    private function setupService(): SetupService
+    {
+        return new SetupService(new SqlCardRepository($this->db()), new SqlChipRepository($this->db()));
+    }
+
+    private function gameStateBuilder(): GameStateBuilder
+    {
+        return new GameStateBuilder(
+            $this->playerRepository(),
+            new SqlCardRepository($this->db()),
+            new SqlChipRepository($this->db())
+        );
     }
 
     public function debug_goToState(int $state = 3) {
