@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use Bga\Games\startups\Rules\CardLocation;
+use Bga\Games\startups\Dto\GameState;
+use Bga\Games\startups\Rules\Companies;
 use Bga\Games\startups\Service\GameStateBuilder;
 use Bga\Games\startups\Service\SetupService;
 use Bga\Games\startups\Tests\Fakes\InMemoryCardRepository;
@@ -13,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 final class GameStateBuilderTest extends TestCase
 {
-    private function build(int $viewer): array
+    private function buildState(int $viewer): GameState
     {
         $players = new InMemoryPlayerRepository();
         $cards = new InMemoryCardRepository();
@@ -25,36 +26,33 @@ final class GameStateBuilderTest extends TestCase
         ]);
         (new SetupService($cards, $chips))->run([101, 102, 103], fn(array $c) => $c);
 
-        return (new GameStateBuilder($players, $cards, $chips))->build($viewer);
+        return (new GameStateBuilder($players, $cards, $chips, ['giraffe_beer' => ['name' => 'Giraffe Beer']]))->buildGameStateForPlayerId($viewer);
     }
 
     #[Test]
-    public function build_afterSetup_returnsOnlyViewerHand(): void
+    public function buildGameStateForPlayerId_afterSetup_returnsViewerVisibleState(): void
     {
-        $data = $this->build(102);
+        $data = $this->buildState(102)->toArray();
 
-        $this->assertCount(3, $data['hand']);
-        $this->assertSame([102, 102, 102], array_column($data['hand'], 'locationArg'));
-        $this->assertSame([101 => 3, 102 => 3, 103 => 3], $data['handCounts']);
-    }
-
-    #[Test]
-    public function build_afterSetup_exposesDeckSizeButNoDeckOrRemovedCards(): void
-    {
-        $data = $this->build(101);
-
-        $this->assertSame(31, $data['deckCount']);
-        $this->assertArrayNotHasKey('deck', $data);
-        $this->assertArrayNotHasKey('removed', $data);
-    }
-
-    #[Test]
-    public function build_afterSetup_startsPlayersWithTenMoneyAndEmptyMarket(): void
-    {
-        $data = $this->build(101);
-
-        $this->assertSame([10, 10, 10], array_column($data['players'], 'money'));
-        $this->assertSame([], $data['market']);
-        $this->assertSame([101 => [], 102 => [], 103 => []], $data['portfolios']);
+        // Unshuffled deal: cards 1-5 removed, 6-8 / 9-11 / 12-14 are the hands, 15-45 the draw pile.
+        $this->assertSame([
+            'players' => [
+                101 => ['id' => 101, 'score' => 0, 'money' => 10],
+                102 => ['id' => 102, 'score' => 0, 'money' => 10],
+                103 => ['id' => 103, 'score' => 0, 'money' => 10],
+            ],
+            'hand' => [
+                ['id' => 9, 'company' => 'bowwow_games', 'locationArg' => 102, 'chips' => 0],
+                ['id' => 10, 'company' => 'bowwow_games', 'locationArg' => 102, 'chips' => 0],
+                ['id' => 11, 'company' => 'bowwow_games', 'locationArg' => 102, 'chips' => 0],
+            ],
+            'handCounts' => [101 => 3, 102 => 3, 103 => 3],
+            'market' => [],
+            'portfolios' => [101 => [], 102 => [], 103 => []],
+            'chipOwners' => array_fill_keys(Companies::ids(), null),
+            'deckCount' => 31,
+            'companyCardCounts' => Companies::CARD_COUNTS,
+            'companies' => ['giraffe_beer' => ['name' => 'Giraffe Beer']],
+        ], $data);
     }
 }

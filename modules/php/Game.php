@@ -52,7 +52,7 @@ class Game extends \Bga\GameFramework\Table
      */
     protected function getAllDatas(int $currentPlayerId): array
     {
-        return $this->gameStateBuilder()->build($currentPlayerId) + ['companies' => $this->companies];
+        return $this->gameStateBuilder()->buildGameStateForPlayerId($currentPlayerId)->toArray();
     }
 
     protected function setupNewGame($players, $options = [])
@@ -112,7 +112,8 @@ class Game extends \Bga\GameFramework\Table
         return new GameStateBuilder(
             $this->playerRepository(),
             new SqlCardRepository($this->db()),
-            new SqlChipRepository($this->db())
+            new SqlChipRepository($this->db()),
+            $this->companies
         );
     }
 

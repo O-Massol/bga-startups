@@ -41,6 +41,14 @@ final class SetupServiceTest extends TestCase
         $this->assertCount(45, $this->cards->rows);
     }
 
+    public static function anyPlayerCount(): array
+    {
+        return [
+            '3 players' => [3],
+            '7 players' => [7],
+        ];
+    }
+
     public static function playerCounts(): array
     {
         return [
@@ -50,27 +58,30 @@ final class SetupServiceTest extends TestCase
     }
 
     #[Test]
-    public function run_threePlayers_keepsCompanyCardCounts(): void
+    #[DataProvider('anyPlayerCount')]
+    public function run_anyPlayerCount_keepsCompanyCardCounts(int $playerCount): void
     {
-        $this->runSetup(3);
+        $this->runSetup($playerCount);
 
         $counts = array_count_values(array_column($this->cards->rows, 'company'));
         $this->assertSame(Companies::CARD_COUNTS, $counts);
     }
 
     #[Test]
-    public function run_threePlayers_numbersDeckCardsInDistinctOrder(): void
+    #[DataProvider('anyPlayerCount')]
+    public function run_anyPlayerCount_numbersDeckCardsInDistinctOrder(int $playerCount): void
     {
-        $this->runSetup(3);
+        $this->runSetup($playerCount);
 
         $orders = array_column($this->cards->at(CardLocation::DECK), 'locationArg');
-        $this->assertCount(31, array_unique($orders));
+        $this->assertCount(count($orders), array_unique($orders));
     }
 
     #[Test]
-    public function run_threePlayers_createsOneUnownedChipPerCompany(): void
+    #[DataProvider('anyPlayerCount')]
+    public function run_anyPlayerCount_createsOneUnownedChipPerCompany(int $playerCount): void
     {
-        $this->runSetup(3);
+        $this->runSetup($playerCount);
 
         $this->assertSame(array_fill_keys(Companies::ids(), null), $this->chips->owners());
     }

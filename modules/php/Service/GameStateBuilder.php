@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bga\Games\startups\Service;
 
+use Bga\Games\startups\Dto\GameState;
 use Bga\Games\startups\Repository\CardRepository;
 use Bga\Games\startups\Repository\ChipRepository;
 use Bga\Games\startups\Repository\PlayerRepository;
@@ -20,10 +21,11 @@ final class GameStateBuilder
         private PlayerRepository $players,
         private CardRepository $cards,
         private ChipRepository $chips,
+        private array $companies,
     ) {
     }
 
-    public function build(int $currentPlayerId): array
+    public function buildGameStateForPlayerId(int $currentPlayerId): GameState
     {
         $players = $this->players->all();
 
@@ -32,15 +34,16 @@ final class GameStateBuilder
             $portfolios[$playerId] = $this->cards->at(CardLocation::PORTFOLIO, $playerId);
         }
 
-        return [
-            'players' => $players,
-            'hand' => $this->cards->at(CardLocation::HAND, $currentPlayerId),
-            'handCounts' => $this->cards->countsByLocationArg(CardLocation::HAND),
-            'market' => $this->cards->at(CardLocation::MARKET),
-            'portfolios' => $portfolios,
-            'chipOwners' => $this->chips->owners(),
-            'deckCount' => $this->cards->countAt(CardLocation::DECK),
-            'companyCardCounts' => Companies::CARD_COUNTS,
-        ];
+        return new GameState(
+            players: $players,
+            hand: $this->cards->at(CardLocation::HAND, $currentPlayerId),
+            handCounts: $this->cards->countsByLocationArg(CardLocation::HAND),
+            market: $this->cards->at(CardLocation::MARKET),
+            portfolios: $portfolios,
+            chipOwners: $this->chips->owners(),
+            deckCount: $this->cards->countAt(CardLocation::DECK),
+            companyCardCounts: Companies::CARD_COUNTS,
+            companies: $this->companies,
+        );
     }
 }
