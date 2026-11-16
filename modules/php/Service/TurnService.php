@@ -8,6 +8,7 @@ use Bga\Games\startups\Repository\CardRepository;
 use Bga\Games\startups\Repository\ChipRepository;
 use Bga\Games\startups\Repository\PlayerRepository;
 use Bga\Games\startups\Rules\CardLocation;
+use Bga\Games\startups\Rules\ChipHolder;
 use Bga\Games\startups\Rules\DrawRules;
 use Bga\Games\startups\Rules\MarketRules;
 use Bga\Games\startups\Rules\TurnErrors;
@@ -86,6 +87,74 @@ final class TurnService
         $this->players->addMoney($playerId, $card['chips']);
 
         return ['cardId' => $cardId, 'company' => $card['company'], 'chips' => $card['chips']];
+    }
+
+    /**
+     * Turn rule 2a: moves a card from the player's hand to their portfolio, then re-evaluates the company's
+     * Anti-Monopoly chip.
+     *
+     * @return array{cardId: int, company: string, chipChange: array{company: string, from: int|null, to: int}|null}
+     *         chipChange is set when the chip changed hands (from = null if it was unowned)
+     * @throws TurnException
+     */
+    public function playToPortfolio(int $playerId, int $cardId): array
+    {
+        $card = $this->cardInHand($playerId, $cardId);
+        $this->cards->move($cardId, CardLocation::PORTFOLIO, $playerId);
+
+        $company = $card['company'];
+        $shares = array_fill_keys(array_column($this->players->all(), 'id'), 0);
+        foreach ($this->cards->at(CardLocation::PORTFOLIO) as $owned) {
+            if ($owned['company'] === $company) {
+                $shares[$owned['locationArg']]++;
+            }
+        }
+        $previous = $this->chips->owners()[$company];
+        $holder = ChipHolder::next($previous, $shares);
+
+        $chipChange = null;
+        if ($holder !== $previous) {
+            $this->chips->setOwner($company, $holder);
+            $chipChange = ['company' => $company, 'from' => $previous, 'to' => $holder];
+        }
+
+        return ['cardId' => $cardId, 'company' => $company, 'chipChange' => $chipChange];
+    }
+
+    /**
+     * Turn rule 2b: moves a card from the player's hand to the market, without chips on it.
+     *
+     * @param string|null $takenFromMarketCompany company of the card taken from the market this turn, null if drawn
+     * @return array{cardId: int, company: string}
+     * @throws TurnException
+     */
+    public function playToMarket(int $playerId, int $cardId, ?string $takenFromMarketCompany): array
+    {
+        $card = $this->cardInHand($playerId, $cardId);
+        if (!MarketRules::canPutToMarket($card['company'], $takenFromMarketCompany)) {
+            throw new TurnException(TurnErrors::sameCompanyAsTakenCard());
+        }
+
+        $this->cards->move($cardId, CardLocation::MARKET, 0);
+
+        return ['cardId' => $cardId, 'company' => $card['company']];
+    }
+
+    /**
+     * @return array{id: int, company: string, location: string, locationArg: int, chips: int}
+     * @throws TurnException if the card is not in the player's hand
+     */
+    private function cardInHand(int $playerId, int $cardId): array
+    {
+        try {
+            $card = $this->cards->get($cardId);
+        } catch (\InvalidArgumentException) {
+            throw new TurnException(TurnErrors::notInYourHand());
+        }
+        if ($card['location'] !== CardLocation::HAND || $card['locationArg'] !== $playerId) {
+            throw new TurnException(TurnErrors::notInYourHand());
+        }
+        return $card;
     }
 
     /** @return string[] companies whose Anti-Monopoly chip the player holds */

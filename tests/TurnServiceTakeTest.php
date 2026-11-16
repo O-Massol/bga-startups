@@ -5,57 +5,12 @@ declare(strict_types=1);
 use Bga\Games\startups\Rules\CardLocation;
 use Bga\Games\startups\Rules\Companies;
 use Bga\Games\startups\Rules\TurnErrors;
-use Bga\Games\startups\Rules\TurnException;
-use Bga\Games\startups\Service\TurnService;
-use Bga\Games\startups\Tests\Fakes\InMemoryCardRepository;
-use Bga\Games\startups\Tests\Fakes\InMemoryChipRepository;
-use Bga\Games\startups\Tests\Fakes\InMemoryPlayerRepository;
+use Bga\Games\startups\Tests\Support\TurnServiceTestCase;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 /** Turn rule 1: take a card, from the draw pile or from the market. */
-final class TurnServiceTakeTest extends TestCase
+final class TurnServiceTakeTest extends TurnServiceTestCase
 {
-    private const ME = 101;
-    private const OTHER = 102;
-
-    private InMemoryCardRepository $cards;
-    private InMemoryChipRepository $chips;
-    private InMemoryPlayerRepository $players;
-    private TurnService $service;
-
-    protected function setUp(): void
-    {
-        $this->cards = new InMemoryCardRepository();
-        $this->chips = new InMemoryChipRepository();
-        $this->players = new InMemoryPlayerRepository();
-        $this->players->createAll([
-            ['id' => self::ME, 'color' => 'ff0000', 'name' => 'Me'],
-            ['id' => self::OTHER, 'color' => '00ff00', 'name' => 'Other'],
-        ]);
-        $this->chips->createAll(Companies::ids());
-        $this->service = new TurnService($this->cards, $this->chips, $this->players);
-    }
-
-    /** @return int the id of the added card */
-    private function addCard(string $company, string $location, int $locationArg = 0, int $chips = 0): int
-    {
-        $this->cards->insertAll([['company' => $company, 'location' => $location, 'location_arg' => $locationArg]]);
-        $id = count($this->cards->rows);
-        $this->cards->setChips($id, $chips);
-        return $id;
-    }
-
-    private function assertRefused(string $expectedMessage, callable $move): void
-    {
-        try {
-            $move();
-            $this->fail('Expected a TurnException');
-        } catch (TurnException $e) {
-            $this->assertSame($expectedMessage, $e->getMessage());
-        }
-    }
-
     // --- drawFromDeck ---
 
     #[Test]

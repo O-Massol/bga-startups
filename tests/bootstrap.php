@@ -5,6 +5,7 @@ spl_autoload_register(function (string $class): void {
     $map = [
         'Bga\\Games\\startups\\' => __DIR__ . '/../modules/php/',
         'Bga\\Games\\startups\\Tests\\Fakes\\' => __DIR__ . '/Fakes/',
+        'Bga\\Games\\startups\\Tests\\Support\\' => __DIR__ . '/Support/',
     ];
     foreach ($map as $prefix => $dir) {
         if (str_starts_with($class, $prefix)) {
