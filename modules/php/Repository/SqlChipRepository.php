@@ -21,4 +21,12 @@ final class SqlChipRepository implements ChipRepository
         $rows = $this->db->collection("SELECT `company_id`, `owner_id` FROM `company_chip`", true);
         return array_map(fn($owner) => $owner === null ? null : (int) $owner, $rows);
     }
+
+    public function setOwner(string $companyId, ?int $playerId): void
+    {
+        $this->db->execute(
+            "UPDATE `company_chip` SET `owner_id` = " . ($playerId === null ? "NULL" : (string) $playerId)
+                . " WHERE `company_id` = " . $this->db->quote($companyId)
+        );
+    }
 }

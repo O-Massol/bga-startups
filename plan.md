@@ -23,11 +23,11 @@ Each iteration ends with a playable, testable Studio build and a commit.
 - [x] Minimal `Game.js` that renders this state (plain DOM first).
 - Done when: starting a table shows each player's own 3 cards and 10 money; others' hands are hidden.
 
-## 3. Turn state machine (server)
+## 3. Turn state machine (server) ✅
 States in `States/`:
 - `PlayerTurnTake` (active player): actions `actDrawFromDeck`, `actTakeFromMarket(cardId)`.
 - `PlayerTurnPlay` (active player): actions `actPlayToPortfolio(cardId)`, `actPlayToMarket(cardId)`.
-- `NextPlayer` (game): updates anti-monopoly chips, checks end condition, advances the player.
+- `NextPlayer` (game): checks the end condition (draw pile empty), advances the player. Anti-Monopoly chips are re-evaluated immediately in `actPlayToPortfolio` (only portfolio changes can move them).
 - `FinalScoring` (game) → `EndScore`.
 Rules to enforce in the server, with the exact `UserException` message when violated:
 - Draw: cost = 1 chip per market card whose company chip you don't hold; refuse if you can't pay for all.
@@ -35,9 +35,10 @@ Rules to enforce in the server, with the exact `UserException` message when viol
 - Market put-back: refuse the same company as the card just taken from the market.
 - Chip owner: strictly more shares than the current holder to take it; ties keep the earlier holder.
 - End: when the last draw-pile card is drawn, the game finishes after that player's `PlayerTurnPlay`.
-- [ ] Implement `zombie()` (draw if possible, else take any allowed market card, then play to portfolio) so abandoned games progress.
-- [ ] Add `debug_` helpers: set up a near-end deck, give a player cards or money.
-- Done when: a full game can be played through Studio's debug controls with plain buttons, reaching the end state.
+- [x] Implement `zombie()` (draw if possible, else take any allowed market card, then play to portfolio) so abandoned games progress.
+- [x] Add `debug_` helpers: set up a near-end deck, give a player cards or money.
+- Rules, service and state wiring are implemented test-first (`tests/`, 100 PHPUnit tests); `FinalScoring` is a stub until section 4.
+- Done when: a full game can be played through Studio's debug controls with plain buttons, reaching the end state. **Verified in a 3-player Studio game.**
 
 ## 4. Scoring
 - [ ] `FinalScoring`: add each hand to its portfolio, then resolve companies 5→10: strict majority gets +3 per share of every other player holding shares in it; each payer −1 per share; no payout on ties. Send one notification per company for animation.

@@ -14,13 +14,17 @@ declare(strict_types=1);
 
 namespace Bga\Games\startups;
 
+use Bga\GameFramework\UserException;
 use Bga\Games\startups\Repository\FrameworkDb;
 use Bga\Games\startups\Repository\SqlCardRepository;
 use Bga\Games\startups\Repository\SqlChipRepository;
 use Bga\Games\startups\Repository\SqlPlayerRepository;
 use Bga\Games\startups\Service\GameStateBuilder;
+use Bga\Games\startups\Rules\CardLocation;
+use Bga\Games\startups\Rules\TurnException;
 use Bga\Games\startups\Service\SetupService;
-use Bga\Games\startups\States\PlayerTurn;
+use Bga\Games\startups\Service\TurnService;
+use Bga\Games\startups\States\PlayerTurnTake;
 
 class Game extends \Bga\GameFramework\Table
 {
@@ -84,7 +88,7 @@ class Game extends \Bga\GameFramework\Table
         // Activate first player once everything has been initialized and ready.
         $this->activeNextPlayer();
 
-        return PlayerTurn::class;
+        return PlayerTurnTake::class;
     }
 
     private function db(): FrameworkDb
@@ -97,9 +101,41 @@ class Game extends \Bga\GameFramework\Table
         );
     }
 
-    private function playerRepository(): SqlPlayerRepository
+    public function playerRepository(): SqlPlayerRepository
     {
         return new SqlPlayerRepository($this->db());
+    }
+
+    public function cardRepository(): SqlCardRepository
+    {
+        return new SqlCardRepository($this->db());
+    }
+
+    public function turnService(): TurnService
+    {
+        return new TurnService($this->cardRepository(), new SqlChipRepository($this->db()), $this->playerRepository());
+    }
+
+    public function companyName(string $companyId): string
+    {
+        return $this->companies[$companyId]['name'];
+    }
+
+    /**
+     * Runs a player move and shows a refused move to the player as an error.
+     *
+     * @template T
+     * @param callable(): T $move
+     * @return T
+     * @throws UserException
+     */
+    public function refusingIllegalMoves(callable $move): mixed
+    {
+        try {
+            return $move();
+        } catch (TurnException $e) {
+            throw new UserException($e->getMessage());
+        }
     }
 
     private function setupService(): SetupService
@@ -119,5 +155,33 @@ class Game extends \Bga\GameFramework\Table
 
     public function debug_goToState(int $state = 3) {
         $this->gamestate->jumpToState($state);
+    }
+
+    /** Keeps only the next $cards cards in the draw pile (the others are set aside) so the game ends soon. */
+    public function debug_nearEndDeck(int $cards = 2)
+    {
+        $this->db()->execute(
+            "UPDATE `card` SET `card_location` = 'removed' WHERE `card_location` = 'deck' AND `card_id` NOT IN ("
+                . "SELECT `card_id` FROM (SELECT `card_id` FROM `card` WHERE `card_location` = 'deck'"
+                . " ORDER BY `card_location_arg`, `card_id` LIMIT " . $cards . ") AS `top`)"
+        );
+    }
+
+    public function debug_giveMoney(int $playerId, int $amount = 5)
+    {
+        $this->playerRepository()->addMoney($playerId, $amount);
+    }
+
+    /** Moves a card of the given company from the draw pile or the removed cards into a player's hand. */
+    public function debug_giveCard(int $playerId, string $company = 'giraffe_beer')
+    {
+        $cardId = $this->db()->value(
+            "SELECT `card_id` FROM `card` WHERE `card_company` = " . $this->db()->quote($company)
+                . " AND `card_location` IN ('deck', 'removed') LIMIT 1"
+        );
+        if ($cardId === null) {
+            throw new UserException("No spare card of $company");
+        }
+        $this->cardRepository()->move((int) $cardId, CardLocation::HAND, $playerId);
     }
 }

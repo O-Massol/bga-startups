@@ -12,4 +12,6 @@ interface ChipRepository
 
     /** @return array<string, int|null> owner player id per company id */
     public function owners(): array;
+
+    public function setOwner(string $companyId, ?int $playerId): void;
 }

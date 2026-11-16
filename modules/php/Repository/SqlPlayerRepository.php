@@ -37,4 +37,16 @@ final class SqlPlayerRepository implements PlayerRepository
             'money' => (int) $r['money'],
         ], $rows);
     }
+
+    public function money(int $playerId): int
+    {
+        return (int) $this->db->value("SELECT `player_money` FROM `player` WHERE `player_id` = " . $playerId);
+    }
+
+    public function addMoney(int $playerId, int $delta): void
+    {
+        $this->db->execute(
+            "UPDATE `player` SET `player_money` = `player_money` + (" . $delta . ") WHERE `player_id` = " . $playerId
+        );
+    }
 }
