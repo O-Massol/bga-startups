@@ -15,14 +15,17 @@
  * @typedef {Gamedatas<startupsPlayer>} startupsGamedatas
  */
 /**
- * @typedef {Object} PlayerTurnArgs
- * @property {number[]} playableCardsIds
+ * @typedef {Object} TakeArgs
+ * @property {number} drawCost
+ * @property {boolean} canDraw
+ * @property {number[]} takeableCardIds
+ */
+/**
+ * @typedef {Object} PlayArgs
+ * @property {string|null} forbiddenMarketCompany company just taken from the market, which cannot go back in it
  */
 
-class PlayerTurn {
-    /** @type {PlayerTurnArgs} */
-    args;
-
+class PlayerTurnTake {
     /**
      * @param {Game} game
      * @param {Bga} bga
@@ -33,29 +36,67 @@ class PlayerTurn {
     }
 
     /**
-     * @param {PlayerTurnArgs} args
+     * @param {TakeArgs} args
      * @param {boolean} isCurrentPlayerActive
      */
     onEnteringState(args, isCurrentPlayerActive) {
-        this.bga.statusBar.setTitle(isCurrentPlayerActive ?
-            _('${you} must play a card or pass') :
-            _('${actplayer} must play a card or pass')
-        );
-
-        if (isCurrentPlayerActive) {
-            args.playableCardsIds.forEach(
-                cardId => this.bga.statusBar.addActionButton(_('Play card with id ${card_id}').replace('${card_id}', `${cardId}`), () => this.onCardClick(cardId))
-            );
-
-            this.bga.statusBar.addActionButton(_('Pass'), () => this.bga.actions.performAction("actPass"), { color: 'secondary' });
+        if (!isCurrentPlayerActive) {
+            return;
         }
+        this.bga.statusBar.addActionButton(
+            _('Draw a card (cost: ${cost})').replace('${cost}', `${args.drawCost}`),
+            () => this.bga.actions.performAction('actDrawFromDeck'),
+            { disabled: !args.canDraw }
+        );
+        this.game.state.market
+            .filter(card => args.takeableCardIds.includes(card.id))
+            .forEach(card => this.bga.statusBar.addActionButton(
+                _('Take ${company} (${chips} chip(s))')
+                    .replace('${company}', this.game.companyName(card.company))
+                    .replace('${chips}', `${card.chips}`),
+                () => this.bga.actions.performAction('actTakeFromMarket', { cardId: card.id }),
+                { color: 'secondary' }
+            ));
+    }
+}
+
+class PlayerTurnPlay {
+    /**
+     * @param {Game} game
+     * @param {Bga} bga
+     */
+    constructor(game, bga) {
+        this.game = game;
+        this.bga = bga;
     }
 
     /**
-     * @param {number} card_id
+     * @param {PlayArgs} args
+     * @param {boolean} isCurrentPlayerActive
      */
-    onCardClick(card_id) {
-        this.bga.actions.performAction("actPlayCard", { card_id });
+    onEnteringState(args, isCurrentPlayerActive) {
+        if (!isCurrentPlayerActive) {
+            return;
+        }
+        // Cards of one company are interchangeable: one pair of buttons per company in hand.
+        const handByCompany = new Map();
+        this.game.state.hand.forEach(card => {
+            if (!handByCompany.has(card.company)) {
+                handByCompany.set(card.company, card.id);
+            }
+        });
+        handByCompany.forEach((cardId, company) => {
+            const name = this.game.companyName(company);
+            this.bga.statusBar.addActionButton(
+                _('${company}: portfolio').replace('${company}', name),
+                () => this.bga.actions.performAction('actPlayToPortfolio', { cardId })
+            );
+            this.bga.statusBar.addActionButton(
+                _('${company}: market').replace('${company}', name),
+                () => this.bga.actions.performAction('actPlayToMarket', { cardId }),
+                { color: 'secondary', disabled: args.forbiddenMarketCompany === company }
+            );
+        });
     }
 }
 
@@ -66,42 +107,110 @@ export class Game {
     constructor(bga) {
         this.bga = bga;
 
-        this.playerTurn = new PlayerTurn(this, bga);
-        this.bga.states.register('PlayerTurn', this.playerTurn);
+        this.bga.states.register('PlayerTurnTake', new PlayerTurnTake(this, bga));
+        this.bga.states.register('PlayerTurnPlay', new PlayerTurnPlay(this, bga));
     }
 
     /**
      * @param {startupsGamedatas} gamedatas
      */
     setup(gamedatas) {
-        this.gamedatas = gamedatas;
-
-        this.bga.gameArea.getElement().insertAdjacentHTML('beforeend', `<div id="player-tables"></div>`);
-
-        const companyName = id => _(gamedatas.companies[id].name);
-
-        Object.values(gamedatas.players).forEach(player => {
-            const handCount = gamedatas.handCounts[player.id] ?? 0;
-            document.getElementById('player-tables').insertAdjacentHTML('beforeend', `
-                <div id="player-table-${player.id}">
-                    <strong>${player.name}</strong>
-                    <span>${_('Money')}: <span id="money-${player.id}">${player.money}</span></span>
-                    <span>${_('Cards in hand')}: <span id="hand-count-${player.id}">${handCount}</span></span>
-                </div>
-            `);
-        });
+        this.state = gamedatas;
 
         this.bga.gameArea.getElement().insertAdjacentHTML('beforeend', `
-            <div id="deck">${_('Draw pile')}: <span id="deck-count">${gamedatas.deckCount}</span></div>
-            <div id="my-hand"><strong>${_('Your hand')}</strong>
-                ${gamedatas.hand.map(card => `<div class="card" data-card-id="${card.id}">${companyName(card.company)}</div>`).join('')}
-            </div>
+            <div id="player-tables"></div>
+            <div id="deck"></div>
+            <div id="market"></div>
+            <div id="my-hand"></div>
         `);
+        this.render();
 
-        this.setupNotifications();
+        this.bga.notifications.setupPromiseNotifications({});
     }
 
-    setupNotifications() {
-        this.bga.notifications.setupPromiseNotifications({});
+    companyName(id) {
+        return _(this.state.companies[id].name);
+    }
+
+    playerName(id) {
+        return this.state.players[id].name;
+    }
+
+    /** Plain DOM rendering of the whole state; the notification handlers only update `this.state`. */
+    render() {
+        const state = this.state;
+        const cardLabel = card => `${this.companyName(card.company)}${card.chips ? ` (+${card.chips})` : ''}`;
+
+        document.getElementById('player-tables').innerHTML = Object.values(state.players).map(player => {
+            const portfolio = (state.portfolios[player.id] ?? []).map(cardLabel).join(', ') || '-';
+            const chips = Object.entries(state.chipOwners)
+                .filter(([, owner]) => owner === player.id)
+                .map(([company]) => this.companyName(company))
+                .join(', ') || '-';
+            return `
+                <div id="player-table-${player.id}">
+                    <strong>${player.name}</strong>
+                    <span>${_('Money')}: ${player.money}</span>
+                    <span>${_('Cards in hand')}: ${state.handCounts[player.id] ?? 0}</span>
+                    <div>${_('Portfolio')}: ${portfolio}</div>
+                    <div>${_('Anti-Monopoly chips')}: ${chips}</div>
+                </div>`;
+        }).join('');
+
+        document.getElementById('deck').innerHTML = `${_('Draw pile')}: ${state.deckCount}`;
+        document.getElementById('market').innerHTML =
+            `<strong>${_('Market')}</strong>: ${state.market.map(cardLabel).join(', ') || '-'}`;
+        document.getElementById('my-hand').innerHTML =
+            `<strong>${_('Your hand')}</strong>: ${state.hand.map(cardLabel).join(', ') || '-'}`;
+    }
+
+    changeHandCount(playerId, delta) {
+        this.state.handCounts[playerId] = (this.state.handCounts[playerId] ?? 0) + delta;
+    }
+
+    removeFromHand(cardId) {
+        this.state.hand = this.state.hand.filter(card => card.id !== cardId);
+    }
+
+    notif_cardDrawn(args) {
+        this.state.players[args.player_id].money = args.money;
+        this.state.market.filter(card => args.chippedCardIds.includes(card.id)).forEach(card => card.chips++);
+        this.state.deckCount = args.deckCount;
+        this.changeHandCount(args.player_id, 1);
+        this.render();
+    }
+
+    notif_cardDrawnPrivate(args) {
+        this.state.hand.push({ ...args.card, chips: 0 });
+        this.render();
+    }
+
+    notif_cardTakenFromMarket(args) {
+        this.state.market = this.state.market.filter(card => card.id !== args.card.id);
+        this.state.players[args.player_id].money = args.money;
+        this.changeHandCount(args.player_id, 1);
+        if (args.player_id === this.bga.players.getCurrentPlayerId()) {
+            this.state.hand.push({ ...args.card, chips: 0 });
+        }
+        this.render();
+    }
+
+    notif_cardPlayedToPortfolio(args) {
+        this.removeFromHand(args.card.id);
+        this.changeHandCount(args.player_id, -1);
+        (this.state.portfolios[args.player_id] ??= []).push({ ...args.card, chips: 0 });
+        this.render();
+    }
+
+    notif_antiMonopolyChipMoved(args) {
+        this.state.chipOwners[args.company] = args.to;
+        this.render();
+    }
+
+    notif_cardPlayedToMarket(args) {
+        this.removeFromHand(args.card.id);
+        this.changeHandCount(args.player_id, -1);
+        this.state.market.push({ ...args.card, chips: 0 });
+        this.render();
     }
 }
