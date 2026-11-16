@@ -22,4 +22,9 @@ final class InMemoryChipRepository implements ChipRepository
     {
         return $this->owners;
     }
+
+    public function setOwner(string $companyId, ?int $playerId): void
+    {
+        $this->owners[$companyId] = $playerId;
+    }
 }

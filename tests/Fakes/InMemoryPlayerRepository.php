@@ -23,4 +23,14 @@ final class InMemoryPlayerRepository implements PlayerRepository
     {
         return $this->players;
     }
+
+    public function money(int $playerId): int
+    {
+        return $this->players[$playerId]['money'];
+    }
+
+    public function addMoney(int $playerId, int $delta): void
+    {
+        $this->players[$playerId]['money'] += $delta;
+    }
 }

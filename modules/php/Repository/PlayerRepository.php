@@ -11,4 +11,9 @@ interface PlayerRepository
 
     /** @return array<int, array{id: int, score: int, money: int}> keyed by player id */
     public function all(): array;
+
+    public function money(int $playerId): int;
+
+    /** @param int $delta positive to gain, negative to pay */
+    public function addMoney(int $playerId, int $delta): void;
 }
