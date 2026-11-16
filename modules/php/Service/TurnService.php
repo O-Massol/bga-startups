@@ -13,6 +13,7 @@ use Bga\Games\startups\Rules\DrawRules;
 use Bga\Games\startups\Rules\MarketRules;
 use Bga\Games\startups\Rules\TurnErrors;
 use Bga\Games\startups\Rules\TurnException;
+use Bga\Games\startups\Rules\ZombieChoice;
 
 /** Turn rules 1 and 2: validates and applies the moves of the active player. */
 final class TurnService
@@ -22,6 +23,42 @@ final class TurnService
         private ChipRepository $chips,
         private PlayerRepository $players,
     ) {
+    }
+
+    /**
+     * What the active player may do at the start of their turn; sent to the client as state args.
+     *
+     * @return array{drawCost: int, canDraw: bool, takeableCardIds: int[]}
+     */
+    public function takeOptions(int $playerId): array
+    {
+        $market = $this->cards->at(CardLocation::MARKET);
+        $held = $this->heldChipCompanies($playerId);
+        $marketCompanies = array_column($market, 'company');
+        $takeable = array_filter($market, fn(array $card) => MarketRules::canTake($card['company'], $held));
+
+        return [
+            'drawCost' => DrawRules::cost($marketCompanies, $held),
+            'canDraw' => $this->cards->countAt(CardLocation::DECK) > 0
+                && DrawRules::canDraw($this->players->money($playerId), $marketCompanies, $held),
+            'takeableCardIds' => array_values(array_column($takeable, 'id')),
+        ];
+    }
+
+    /** @return int[] ids of the cards in the player's hand */
+    public function handCardIds(int $playerId): array
+    {
+        return array_column($this->cards->at(CardLocation::HAND, $playerId), 'id');
+    }
+
+    /** @return int|null market card a zombie takes, null if it draws (see ZombieChoice::marketCardToTake) */
+    public function zombieMarketCardToTake(int $playerId): ?int
+    {
+        return ZombieChoice::marketCardToTake(
+            $this->players->money($playerId),
+            $this->cards->at(CardLocation::MARKET),
+            $this->heldChipCompanies($playerId)
+        );
     }
 
     /**
