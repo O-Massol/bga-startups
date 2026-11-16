@@ -14,13 +14,16 @@ declare(strict_types=1);
 
 namespace Bga\Games\startups;
 
+use Bga\GameFramework\UserException;
 use Bga\Games\startups\Repository\FrameworkDb;
 use Bga\Games\startups\Repository\SqlCardRepository;
 use Bga\Games\startups\Repository\SqlChipRepository;
 use Bga\Games\startups\Repository\SqlPlayerRepository;
 use Bga\Games\startups\Service\GameStateBuilder;
+use Bga\Games\startups\Rules\TurnException;
 use Bga\Games\startups\Service\SetupService;
-use Bga\Games\startups\States\PlayerTurn;
+use Bga\Games\startups\Service\TurnService;
+use Bga\Games\startups\States\PlayerTurnTake;
 
 class Game extends \Bga\GameFramework\Table
 {
@@ -84,7 +87,7 @@ class Game extends \Bga\GameFramework\Table
         // Activate first player once everything has been initialized and ready.
         $this->activeNextPlayer();
 
-        return PlayerTurn::class;
+        return PlayerTurnTake::class;
     }
 
     private function db(): FrameworkDb
@@ -97,9 +100,41 @@ class Game extends \Bga\GameFramework\Table
         );
     }
 
-    private function playerRepository(): SqlPlayerRepository
+    public function playerRepository(): SqlPlayerRepository
     {
         return new SqlPlayerRepository($this->db());
+    }
+
+    public function cardRepository(): SqlCardRepository
+    {
+        return new SqlCardRepository($this->db());
+    }
+
+    public function turnService(): TurnService
+    {
+        return new TurnService($this->cardRepository(), new SqlChipRepository($this->db()), $this->playerRepository());
+    }
+
+    public function companyName(string $companyId): string
+    {
+        return $this->companies[$companyId]['name'];
+    }
+
+    /**
+     * Runs a player move and shows a refused move to the player as an error.
+     *
+     * @template T
+     * @param callable(): T $move
+     * @return T
+     * @throws UserException
+     */
+    public function refusingIllegalMoves(callable $move): mixed
+    {
+        try {
+            return $move();
+        } catch (TurnException $e) {
+            throw new UserException($e->getMessage());
+        }
     }
 
     private function setupService(): SetupService

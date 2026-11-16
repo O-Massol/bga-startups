@@ -6,6 +6,7 @@ namespace Bga\Games\startups\States;
 
 use Bga\GameFramework\StateType;
 use Bga\Games\startups\Game;
+use Bga\Games\startups\Rules\CardLocation;
 
 class NextPlayer extends \Bga\GameFramework\States\GameState
 {
@@ -20,24 +21,16 @@ class NextPlayer extends \Bga\GameFramework\States\GameState
         );
     }
 
-    /**
-     * Game state action, example content.
-     *
-     * The onEnteringState method of state `nextPlayer` is called everytime the current game state is set to `nextPlayer`.
-     */
-    function onEnteringState(int $activePlayerId) {
-
-        // Give some extra time to the active player when he completed an action
+    /** The game ends once the last card of the draw pile has been drawn and that player's turn is over. */
+    function onEnteringState(int $activePlayerId)
+    {
         $this->game->giveExtraTime($activePlayerId);
-        
-        $this->game->activeNextPlayer();
 
-        // Go to another gamestate
-        $gameEnd = false; // Here, we would detect if the game is over to make the appropriate transition
-        if ($gameEnd) {
-            return EndScore::class;
-        } else {
-            return PlayerTurn::class;
+        if ($this->game->cardRepository()->countAt(CardLocation::DECK) === 0) {
+            return FinalScoring::class;
         }
+
+        $this->game->activeNextPlayer();
+        return PlayerTurnTake::class;
     }
 }
